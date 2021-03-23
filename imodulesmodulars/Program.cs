@@ -77,6 +77,9 @@ namespace imodulesmodulars
 
                     }
                 }
+
+                Console.WriteLine("Finsihed Downloading! Have a nice day!");
+                Console.ReadLine();
             }
         }
     }
