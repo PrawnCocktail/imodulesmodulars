@@ -32,40 +32,45 @@ namespace imodulesmodulars
                         var videotitlejson = client.DownloadString("https://api.gotostage.com/contents?ids=" + video);
                         var videoTitle = JsonConvert.DeserializeObject<List<VideoTitle>>(videotitlejson);
 
-                        foreach (var resource in videoResources.resources)
+                        if (videoResources.status != "NoAssetsAvailable")
                         {
-                            if (resource.resourceType == "recording")
+                            foreach (var resource in videoResources.resources)
                             {
-                                foreach (var type in resource.attributes)
+                                string title = MakeValidFileName(videoTitle[0].title);
+
+                                if (resource.resourceType == "recording")
                                 {
-                                    if (type.name == "cdnlocation")
+                                    foreach (var type in resource.attributes)
                                     {
-                                        if (!File.Exists(videoTitle[0].title + ".mp4"))
+                                        if (type.name == "cdnlocation")
                                         {
-                                            Console.WriteLine("Downloading Video: " + videoTitle[0].title);
-                                            client.DownloadFile(type.value, videoTitle[0].title + ".mp4");
-                                        }
-                                        else
-                                        {
-                                            Console.WriteLine(videoTitle[0].title + " video already exists, Skipping.");
+                                            if (!File.Exists(title + ".mp4"))
+                                            {
+                                                Console.WriteLine("Downloading Video: " + title);
+                                                client.DownloadFile(type.value, title + ".mp4");
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine(title + " video already exists, Skipping.");
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            if (resource.resourceType == "parsed_transcript")
-                            {
-                                foreach (var type in resource.attributes)
+                                if (resource.resourceType == "parsed_transcript")
                                 {
-                                    if (type.name == "cdnlocation")
+                                    foreach (var type in resource.attributes)
                                     {
-                                        if (!File.Exists(videoTitle[0].title + "_transcript.json"))
+                                        if (type.name == "cdnlocation")
                                         {
-                                            Console.WriteLine("Downloading Transcript: " + videoTitle[0].title);
-                                            client.DownloadFile(type.value, videoTitle[0].title + "_transcript.json");
-                                        }
-                                        else
-                                        {
-                                            Console.WriteLine(videoTitle[0].title + " transcript already exists, Skipping.");
+                                            if (!File.Exists(title + "_transcript.json"))
+                                            {
+                                                Console.WriteLine("Downloading Transcript: " + title);
+                                                client.DownloadFile(type.value, title + "_transcript.json");
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine(title + " transcript already exists, Skipping.");
+                                            }
                                         }
                                     }
                                 }
@@ -81,6 +86,14 @@ namespace imodulesmodulars
                 Console.WriteLine("Finsihed Downloading! Have a nice day!");
                 Console.ReadLine();
             }
+        }
+
+        private static string MakeValidFileName(string name)
+        {
+            string invalidChars = System.Text.RegularExpressions.Regex.Escape(new string(Path.GetInvalidFileNameChars()));
+            string invalidRegStr = string.Format(@"([{0}]*\.+$)|([{0}]+)", invalidChars);
+
+            return System.Text.RegularExpressions.Regex.Replace(name, invalidRegStr, "");
         }
     }
 }
